@@ -3,4 +3,4 @@
 # they can be added here without changing external systems.
 FROM gliderlabs/herokuish
 
-ENV USER=herokuish
+# ENV USER=herokuish
