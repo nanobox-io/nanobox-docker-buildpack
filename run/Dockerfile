@@ -1,7 +1,10 @@
 FROM heroku/heroku:16
 
+# todo: remove this once http_port is being pulled from nanobox.yml
 # Tell nanobox to route to port 8080
 LABEL io.nanobox.http_port="8080"
+
+# If a web app is run, let's set the PORT env
 ENV PORT=8080
 
 # Tell herokuish to use the herokuish user
@@ -41,3 +44,7 @@ RUN addgroup --quiet --gid "32767" "herokuishuser" && \
         --quiet \
         --home "/app" \
         "herokuishuser"
+
+# todo: remove this once command is being pulled from nanobox.yml
+# Start the web app
+CMD ["/start", "web"]
