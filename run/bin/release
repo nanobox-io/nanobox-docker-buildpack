@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Run a heroku release if it's specified
+if [[ -n "$(herokuish procfile parse release)" ]]; then
+  /exec release
+fi

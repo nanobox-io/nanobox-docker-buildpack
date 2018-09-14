@@ -1,3 +1,40 @@
+# build herokuish
+FROM golang:1.8.3 as builder
+
+RUN apt-get update && \
+    apt-get install -y \
+      # build tools, for compiling
+      build-essential \
+      # install curl to fetch dev things
+      curl \
+      # we'll need git for fetching golang deps
+      git
+
+# clone the source
+RUN mkdir -p /go/src/github.com/tylerflint/herokuish && \
+    cd /go/src/github.com/tylerflint && \
+    git clone https://github.com/tylerflint/herokuish.git
+
+# set the working directory
+WORKDIR /go/src/github.com/tylerflint/herokuish
+
+# checkout the custom branch
+RUN git checkout refactor/use-root
+
+# fetch deps
+RUN make deps
+
+# build the source code
+RUN make build
+
+# copy the linux build into place
+RUN mkdir -p /dist && \
+    cp build/linux/herokuish /dist/herokuish
+
+# did it work?
+RUN /dist/herokuish
+
+# put the image together
 FROM heroku/heroku:16
 
 # todo: remove this once http_port is being pulled from nanobox.yml
@@ -7,44 +44,22 @@ LABEL io.nanobox.http_port="8080"
 # If a web app is run, let's set the PORT env
 ENV PORT=8080
 
-# Tell herokuish to use the herokuish user
-ENV USER=herokuishuser
-
 # Set the image working directory to /app
 WORKDIR /app
 
-ENV DEBIAN_FRONTEND noninteractive
+# copy the bash profile
+COPY etc /etc
 
-RUN apt-get update -qq \
- && apt-get install -qq -y daemontools \
- && apt-get -qq -y \
-    --allow-downgrades \
-    --allow-remove-essential \
-    --allow-change-held-packages \
-    dist-upgrade \
- && apt-get clean \
- && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* /var/tmp/*
+# copy release scripts
+COPY bin /bin
 
-# Install herokuish
-RUN curl "https://github.com/gliderlabs/herokuish/releases/download/v0.4.4/herokuish_0.4.4_linux_x86_64.tgz" \
-    --silent -L | tar -xzC /bin
-RUN ln -s /bin/herokuish /start && \
-    ln -s /bin/herokuish /exec
+# copy herokuish from the builder image
+COPY --from=builder /dist/herokuish /bin/herokuish
 
-# Create the herokuish user
-RUN addgroup --quiet --gid "32767" "herokuishuser" && \
-    adduser \
-        --shell /bin/bash \
-        --disabled-password \
-        --force-badname \
-        --no-create-home \
-        --uid "32767" \
-        --gid "32767" \
-        --gecos '' \
-        --quiet \
-        --home "/app" \
-        "herokuishuser"
+# symlink shortcuts
+RUN ln -s /bin/herokuish /build && \
+	  ln -s /bin/herokuish /start && \
+	  ln -s /bin/herokuish /exec
 
-# todo: remove this once command is being pulled from nanobox.yml
 # Start the web app
 CMD ["/start", "web"]
