@@ -37,13 +37,6 @@ RUN /dist/herokuish
 # put the image together
 FROM heroku/heroku:16
 
-# todo: remove this once http_port is being pulled from nanobox.yml
-# Tell nanobox to route to port 8080
-LABEL io.nanobox.http_port="8080"
-
-# If a web app is run, let's set the PORT env
-ENV PORT=8080
-
 # Set the image working directory to /app
 WORKDIR /app
 
@@ -61,5 +54,17 @@ RUN ln -s /bin/herokuish /build && \
 	  ln -s /bin/herokuish /start && \
 	  ln -s /bin/herokuish /exec
 
-# Start the web app
-CMD ["/start", "web"]
+# # install foreman (well, forego but renamed to foreman)
+# RUN cd /tmp && \
+#     wget https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-amd64.tgz && \
+#     tar -xzf forego-stable-linux-amd64.tgz && \
+#     cp forego /bin/foreman && \
+#     chmod +x /bin/foreman
+
+# install foreman (well, goreman but renamed to foreman)
+RUN cd /tmp && \
+    wget https://github.com/mattn/goreman/releases/download/v0.0.10/goreman_linux_amd64.zip && \
+    unzip goreman_linux_amd64.zip && \
+    cp goreman /bin/foreman && \
+    chmod +x /bin/foreman && \
+    rm -rf /tmp/*
