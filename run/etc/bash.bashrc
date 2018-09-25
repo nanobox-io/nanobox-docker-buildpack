@@ -42,6 +42,9 @@ env \
 # Source the magical database_url
 . /etc/profile.d/database_url.sh
 
+# Source the magical redis_url
+. /etc/profile.d/redis_url.sh
+
 # Source all of the profile scripts within the app
 if [ -d /app/.profile.d ]; then
   for i in /app/.profile.d/*.sh; do
