@@ -46,6 +46,9 @@ COPY etc /etc
 # copy release scripts
 COPY bin /bin
 
+# copy hooks
+COPY opt /opt
+
 # copy herokuish from the builder image
 COPY --from=builder /dist/herokuish /bin/herokuish
 
